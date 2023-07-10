@@ -8,12 +8,13 @@ from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain.vectorstores import Pinecone
 from langchain.llms import OpenAI
 from langchain.chains.question_answering import load_qa_chain
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv('.env')
 
 # Initialize Flask app
 app = Flask(__name__)
-
-# Set OpenAI API key
-os.environ["OPENAI_API_KEY"] = "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"
 
 # Load documents from a directory
 def load_docs(directory):
@@ -29,20 +30,20 @@ def split_docs(documents, chunk_size=1000, chunk_overlap=20):
 
 # Load OpenAI embeddings
 def load_embeddings():
-    client = openai.api_key = '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'
+    client = openai.api_key = os.getenv('OPENAI_API_KEY')
     embeddings = OpenAIEmbeddings(model="ada", client=client)
     return embeddings
 
 # Initialize Pinecone index
 def init_index(docs, embeddings):
-    pinecone.init(api_key="f3493788-2a36-48ee-a2d3-f6205e2c71c0", environment="asia-northeast1-gcp")
+    pinecone.init(api_key = os.getenv('PINECONE_API'), environment="asia-northeast1-gcp")
     index_name = "qabot"
     index = Pinecone.from_documents(docs, embeddings, index_name=index_name)
     return index
 
 # Load language model
 def load_language_model():
-    client = openai.api_key = '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'
+    client = openai.api_key = os.getenv('OPENAI_API_KEY')
     llm = OpenAI(model="text-davinci-003", client=client)
     return llm
 

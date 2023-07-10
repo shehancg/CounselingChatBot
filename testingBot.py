@@ -8,12 +8,16 @@ from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain.vectorstores import Pinecone
 from langchain.llms import OpenAI
 from langchain.chains.question_answering import load_qa_chain
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv('.env')
 
 # Initialize Flask app
 app = Flask(__name__)
 
 # Set OpenAI API key
-os.environ["OPENAI_API_KEY"] = "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"
+#os.environ["OPENAI_API_KEY"] = "OPENAI_API_KEY"
 
 # In-memory storage for past information
 memory = {}
@@ -32,7 +36,7 @@ def split_docs(documents, chunk_size=1000, chunk_overlap=20):
 
 # Load OpenAI embeddings
 def load_embeddings():
-    client = openai.api_key = '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'
+    client = openai.api_key = os.getenv('OPENAI_API_KEY')
     embeddings = OpenAIEmbeddings(model="ada", client=client)
     return embeddings
 
@@ -45,9 +49,12 @@ def init_index(docs, embeddings):
 
 # Load language model
 def load_language_model():
-    client = openai.api_key = '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'
-    llm = OpenAI(model="text-davinci-003", client=client)
+    client = openai.api_key = os.getenv('OPENAI_API_KEY')
+    llm = OpenAI(model="gpt-3.5-turbo", client=client)
     return llm
+
+# Initialize conversation history
+conversation = []
 
 # Initialize question-answering chain
 def initialize_qa_chain(llm):
@@ -75,22 +82,48 @@ def get_answer(query):
     return answer
 
 # Define the API endpoint for answering questions
+#@app.route('/answer', methods=['POST'])
+# def answer_question():
+#     # Get the query from the request data
+#     query = request.json['query']
+    
+#     # Add the query to the conversation history
+#     conversation.append(query)
+    
+#     # Generate response from ChatGPT based on conversation history
+#     response = llm.generate(conversation, max_tokens=50)
+    
+#     # Extract the answer from the response
+#     answer = response.choices[0].text.strip()
+    
+#     # Return the answer as a JSON response
+#     return jsonify({'answer': answer})
+
+# Define OpenAI chat model
+openai_chat_model = "gpt-3.5-turbo"
+
+# Define the API endpoint for answering questions
 @app.route('/answer', methods=['POST'])
 def answer_question():
     # Get the query from the request data
     query = request.json['query']
-    
-    # Check if there is past information related to the query
-    if query in memory:
-        # Retrieve the answer from memory
-        answer = memory[query]
-    else:
-        # Get the answer using the question-answering chain
-        answer = get_answer(query)
-        
-        # Store the answer in memory for future reference
-        memory[query] = answer
-    
+
+    # Add the query to the conversation history
+    conversation.append(query)
+
+    # Generate response from ChatGPT based on conversation history
+    response = openai.ChatCompletion.create(
+        model=openai_chat_model,
+        messages=[
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": query}
+        ],
+        max_tokens=50
+    )
+
+    # Extract the answer from the response
+    answer = response.choices[0].message.content.strip()
+
     # Return the answer as a JSON response
     return jsonify({'answer': answer})
 
