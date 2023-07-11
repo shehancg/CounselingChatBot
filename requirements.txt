@@ -7,4 +7,3 @@ pinecone-client
 tiktoken
 flask
 python-dotenv
-python==3.10.6
