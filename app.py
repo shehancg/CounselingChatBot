@@ -13,6 +13,8 @@ from dotenv import load_dotenv
 # Load environment variables from .env file
 load_dotenv('.env')
 
+directory = './data/'
+
 # Initialize Flask app
 app = Flask(__name__)
 
@@ -37,7 +39,7 @@ def load_embeddings():
 # Initialize Pinecone index
 def init_index(docs, embeddings):
     pinecone.init(api_key = os.getenv('PINECONE_API'), environment="asia-northeast1-gcp")
-    index_name = "qabot"
+    index_name = "qabot2"
     index = Pinecone.from_documents(docs, embeddings, index_name=index_name)
     return index
 
@@ -59,7 +61,7 @@ llm = load_language_model()
 chain = initialize_qa_chain(llm)
 
 # Get similar documents based on a query
-def get_similar_docs(query, k=1, score=False):
+def get_similar_docs(query, k=2, score=False):
     if score:
         similar_docs = index.similarity_search_with_score(query, k=k)
     else:
